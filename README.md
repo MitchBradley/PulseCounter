@@ -13,6 +13,8 @@ on this input, a counter will be incremented by one.
 * GPIO 0 - Counter reset input.  A transition on this pin will reset the counter.  This pin is normally connected to the "BOOT" button on an ESP32, so it is not necessary to connect an external switch; you can just push the BOOT button.
 * GPIO 18 - Test output.  This generates a 100 kHz signal.  You can connect it to GPIO 4 to test the program.
 
+You also need to connect GND between the Pulse Counter ESP32 and the external device that is generating the pulses.
+
 ## Installation
 
 Get the files bootloader.bin, partitions.bin, and firmware.bin from the *binaries* folder in this repo.
@@ -20,10 +22,10 @@ Get the files bootloader.bin, partitions.bin, and firmware.bin from the *binarie
 Use esptool to install it on an ESP32 with a command like:
 
 ```
-python esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_size 4MB 0x1000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin
+python esptool.py --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_size 4MB 0x1000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin
 ```
 
-You might need to add extra arguments like `--port COM5` or `--chip esp23` or `--flash_mode dio` depending on your system and ESP32 device.  If you have installation problems, look for esptool help on the Internet.
+You might need to add extra arguments like `--port COM5` or `--chip esp32` or `--flash_mode dio` depending on your system and ESP32 device.  If you have installation problems, look for esptool help on the Internet.
 
 ## Usage
 
