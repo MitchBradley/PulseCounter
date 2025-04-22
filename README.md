@@ -4,12 +4,13 @@
 
 This is a simple ESP32 application for counting pulses on an GPIO pin.  It is
 intended for debugging problems with step pulse generation on CNC controllers,
-but could be used for other purposes.
+but could be used for other purposes.  The current pulse count is displayed on the USB serial port.
 
 ## Pins
 
 * GPIO 4 - This is the pulse input.  Connect the signal source (0-3.3V) to it.  When a rising edge occurs
 on this input, a counter will be incremented by one.
+* GPIO 2 - This is the direction input.  Connect the direction signal (0-3.3V) to it.  When it is high or not connected, the counter will increment; when low, the counter will decrement.
 * GPIO 0 - Counter reset input.  A transition on this pin will reset the counter.  This pin is normally connected to the "BOOT" button on an ESP32, so it is not necessary to connect an external switch; you can just push the BOOT button.
 * GPIO 18 - Test output.  This generates a 100 kHz signal.  You can connect it to GPIO 4 to test the program.
 

@@ -22,6 +22,7 @@
  * GPIO status:
  * GPIO18: output for testing
  * GPIO4:  counter input, pulled up, interrupt from rising edge.
+ * GPIO2: Direction input, pulled up - selects whether pos_counts or neg_counts is incremented
  * GPIO0: (Boot button) - clears counter
  *
  * Test:
@@ -34,19 +35,20 @@
 #define LEDC_HZ 100000
 
 #define GPIO_INPUT_IO_0 4
+#define GPIO_INPUT_IO_DIR 2
 #define GPIO_INPUT_IO_CLR 0
 #define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_CLR))
 #define ESP_INTR_FLAG_DEFAULT 0
 
-static xQueueHandle gpio_evt_queue = NULL;
+static QueueHandle_t gpio_evt_queue = NULL;
 
-uint32_t counts;
+int pos_counts, neg_counts;
 static void IRAM_ATTR gpio_isr_handler(void *arg)
 {
     uint32_t gpio_num = (uint32_t)arg;
     if (gpio_num == GPIO_INPUT_IO_CLR)
     {
-        counts = 0;
+        pos_counts = neg_counts = 0;
         if (gpio_get_level(gpio_num) == 0)
         {
             // To avoid excess chatter, send the event only on the falling edge
@@ -55,7 +57,11 @@ static void IRAM_ATTR gpio_isr_handler(void *arg)
     }
     else
     {
-        ++counts;
+        if (gpio_get_level(2)) {
+            ++pos_counts;
+        } else {
+            ++neg_counts;
+        }
     }
 }
 static void gpio_task(void *arg)
@@ -111,6 +117,10 @@ void app_main(void)
 
     gpio_set_intr_type(GPIO_INPUT_IO_CLR, GPIO_INTR_ANYEDGE);
 
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.pin_bit_mask = 1ULL << GPIO_INPUT_IO_DIR;
+    gpio_config(&io_conf);
+
     // create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreate(gpio_task, "gpio_task", 2048, NULL, 10, NULL);
@@ -123,7 +133,7 @@ void app_main(void)
 
     while (1)
     {
-        printf("counts: %d\n", counts);
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        printf("+: %d -: %d diff: %d\n", pos_counts, neg_counts, pos_counts - neg_counts);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
